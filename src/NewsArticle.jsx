@@ -1,8 +1,8 @@
 import React from 'react';
 import './NewsArticle.css';
 
-const NewsArticle = (props) => {
-  const { headline, author, time, url } = props;
+const NewsArticle = ({ article }) => {
+  const { headline, author, time, url } = article;
 
   return (
     <div className="news-article">

@@ -2,11 +2,13 @@ import React from 'react';
 import NewsArticle from './NewsArticle';
 import './NewsFeed.css';
 
+const searchUrlBase = 'http://hn.algolia.com/api/v1';
 
 const NEWS_TYPE = {
   MOST_RECENT: 'MOST_RECENT',
   ALL_STORIES: 'ALL_STORIES',
-  BY_URL: 'BY_URL'
+  BY_URL: 'BY_URL',
+  BY_AUTHOR: 'BY_AUTHOR'
 }
 
 class NewsFeed extends React.Component {
@@ -24,38 +26,38 @@ class NewsFeed extends React.Component {
   }
 
   fetchArticles = (newsType) => {
+    const { searchInput } = this.state;
     let url;
 
     if (NEWS_TYPE.MOST_RECENT === newsType) {
       // construct the url for getting top news for the search input in state
-    url = `http://hn.algolia.com/api/v1/search_by_date?tags=story&query=${this.state.searchInput}`
+      url = `${searchUrlBase}/search_by_date?tags=story&query=${searchInput}`
     } else if (NEWS_TYPE.ALL_STORIES === newsType) {
       // construct the url for getting newest news for the search input in state
-    url = `http://hn.algolia.com/api/v1/search?query=foo&tags=story&query=${this.state.searchInput}`
+      url = `${searchUrlBase}/search?query=foo&tags=story&query=${searchInput}`
     } else if (NEWS_TYPE.BY_URL === newsType) {
-    url = `http://hn.algolia.com/api/v1/search?query=bar&restrictSearchableAttributes=url&query=${this.state.searchInput}`
+      url = `${searchUrlBase}/search?query=bar&restrictSearchableAttributes=url&query=${searchInput}`
+    } else if (NEWS_TYPE.BY_AUTHOR === newsType) {
+      url = `${searchUrlBase}/search?tags=author_${searchInput}`
     } else {
       return;
     }
   
     fetch(url)
     .then((response) => response.json())
-    .then((responseJson) => {
+    .then((responseJson) =>
       this.setState({
         newsArticles: responseJson.hits
-      });
-    })}
+      })
+    )}
   
   render() {
     const newsArticlesComponents = this.state.newsArticles.map((newsArticle, idx) => {
       return (
-      <NewsArticle 
-        key={idx}
-        headline={newsArticle.title}
-        author={newsArticle.author}
-        time={newsArticle.created_at}
-        url={newsArticle.url}
-      />
+        <NewsArticle 
+          key={idx}
+          article={newsArticle}
+        />
       )
     }); 
 
@@ -63,12 +65,17 @@ class NewsFeed extends React.Component {
       <div id="news">
         <div id="header-div">
           <div>
-          <h1>Browse the News</h1>
+            <h1>Browse the News</h1>
           </div>
         </div>
         <div id="search-component">
         <label for="search" id="search-for-label">Search for : </label>
-        <input type="text" id="search-for-label" onChange={this.updateSearchInput} placeholder="Topic..."></input>
+        <input
+          type="text"
+          id="search-for-label"
+          onChange={this.updateSearchInput}
+          placeholder="Topic..."
+        />
         <br></br>
         <br></br>
         <label for="search-options-label">Filter by :</label>
@@ -82,15 +89,18 @@ class NewsFeed extends React.Component {
             <button id="buttons" onClick={() => this.fetchArticles(NEWS_TYPE.BY_URL)} className="stories-by-search">
               Matching URL's
             </button>
-        </div>
+            <button id="buttons" onClick={() => this.fetchArticles(NEWS_TYPE.BY_AUTHOR)} className="stories-by-author">
+              Author
+            </button>
+          </div>
         </div>
         <div id="news-component">
           <div id="news-article-info">
-          {newsArticlesComponents}
+            {newsArticlesComponents}
           </div>
         </div>
       </div>
-        )
+    )
   }
 }
 
